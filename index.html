@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Steam Lobby Wrapper</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      max-width: 40rem;
+      margin: 4rem auto;
+      padding: 0 1rem;
+    }
+    form { display: flex; gap: 0.5rem; }
+    input { flex: 1; padding: 0.5rem; }
+    button { padding: 0.5rem 1rem; }
+    #output { margin-top: 1rem; word-break: break-all; }
+  </style>
+  <script>
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      var app = params.get("app");
+      var lobby = params.get("lobby");
+      var steamid = params.get("steamid");
+      var numeric = /^\d+$/;
+      if (numeric.test(app) && numeric.test(lobby) && numeric.test(steamid)) {
+        window.location.replace("steam://joinlobby/" + app + "/" + lobby + "/" + steamid);
+      }
+    })();
+  </script>
+</head>
+<body>
+  <h1>Steam Lobby Wrapper</h1>
+  <form id="wrap-form">
+    <input id="lobby-link" type="text" placeholder="steam://joinlobby/..." autocomplete="off">
+    <button type="submit">Create Wrapped Link</button>
+  </form>
+  <p id="output"></p>
+  <p id="copy"></p>
+
+  <script>
+    document.getElementById("wrap-form").addEventListener("submit", function (e) {
+      e.preventDefault();
+      var input = document.getElementById("lobby-link").value.trim();
+      var output = document.getElementById("output");
+
+      // Just need to check for the three numbers, 
+      // leading "steam://joinlobby/" is optional and can still build a link.
+      var match = input.match(/(\d+)\/(\d+)\/(\d+)\/?$/);
+      if (!match) {
+        output.textContent = "Expected a link like steam://joinlobby/<app>/<lobby>/<steamid>";
+        return;
+      }
+      var url = new URL(window.location.href.split(/[?#]/)[0]);
+      url.searchParams.set("app", match[1]);
+      url.searchParams.set("lobby", match[2]);
+      url.searchParams.set("steamid", match[3]);
+      output.innerHTML = "";
+      var a = document.createElement("a");
+      a.href = url.toString();
+      a.textContent = url.toString();
+      output.appendChild(a);
+      var copy = document.getElementById("copy");
+      var b = document.getElementById("copy-button") ?? document.createElement("button");
+      b.id = "copy-button";
+      b.textContent = "Copy Link to Clipboard";
+      copy.appendChild(b);
+
+      document.getElementById("copy-button").addEventListener("click", (e) => {
+        navigator.clipboard.writeText(url.toString());
+        b.textContent = "Copied!";
+      });
+
+    });
+  </script>
+</body>
+</html>
